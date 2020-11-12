@@ -37,11 +37,11 @@ public class FtpClientService implements IFtpClientService{
 
   @Override
   public boolean authorise(String username, String password) throws IOException {
-    sendMessage("USER" + username);
+    sendMessage("USER " + username);
     if (receiveAnswer().startsWith("331"))
       return false;
 
-    sendMessage("PASS" + password);
+    sendMessage("PASS " + password);
 
     return receiveAnswer().startsWith("230");
   }
@@ -50,16 +50,19 @@ public class FtpClientService implements IFtpClientService{
 
   @Override
   public void changeWorkDirectory(String newDirectoryPath) throws IOException {
-
+    sendMessage("CWD " + newDirectoryPath);
   }
 
   @Override
   public void reinitialize() throws IOException {
-
+    sendMessage("REIN");
   }
 
   @Override
   public void quit() throws IOException {
-
+    sendMessage("QUIT");
+    ftpClient.getWriter().close();
+    ftpClient.getIn().close();
+    ftpClient.getSocket().close();
   }
 }

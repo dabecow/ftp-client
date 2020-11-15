@@ -5,22 +5,22 @@ import java.net.Socket;
 
 public class FtpClient {
 
-  private Socket socket;
-  private BufferedReader in;
-  private PrintWriter writer;
+  private Socket cmdSocket;
+  private BufferedReader cmdIn;
+  private PrintWriter cmdWriter;
   private String log;
 
   public FtpClient(){
     log = "Log:\n";
   }
 
-  public void setSocket(Socket socket){
-    this.socket = socket;
+  public void setCmdSocket(Socket cmdSocket){
+    this.cmdSocket = cmdSocket;
   }
 
-  public void initStreams() throws IOException {
-    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    writer = new PrintWriter(socket.getOutputStream(), true);
+  public void initCmdStreams() throws IOException {
+    cmdIn = new BufferedReader(new InputStreamReader(cmdSocket.getInputStream()));
+    cmdWriter = new PrintWriter(cmdSocket.getOutputStream(), true);
   }
 
   public void appendToLogLn(String message){
@@ -31,16 +31,16 @@ public class FtpClient {
     return log;
   }
 
-  public BufferedReader getIn() {
-    return in;
+  public BufferedReader getCmdIn() {
+    return cmdIn;
   }
 
-  public PrintWriter getWriter() {
-    return writer;
+  public PrintWriter getCmdWriter() {
+    return cmdWriter;
   }
 
-  public Socket getSocket() {
-    return socket;
+  public Socket getCmdSocket() {
+    return cmdSocket;
   }
 
 }

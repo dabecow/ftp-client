@@ -37,7 +37,7 @@ public class FtpClientService implements IFtpClientService{
 
     String answer = receiveAnswer();
 
-    if (!answer.startsWith("227"))
+    if (!answer.startsWith("2"))
       throw new IOException(answer);
     String ip;
     int port;
@@ -58,7 +58,9 @@ public class FtpClientService implements IFtpClientService{
       }
     } else throw new IOException();
 
-    return new Socket(ip, port);
+    Socket socket = new Socket(ip, port);
+
+    return socket;
   }
 
 
@@ -80,8 +82,9 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public void changeWorkDirectory(String newDirectoryPath) {
+  public String changeWorkDirectory(String newDirectoryPath) throws IOException {
     sendMessage("CWD " + newDirectoryPath);
+    return receiveAnswer();
   }
 
   @Override
@@ -123,8 +126,25 @@ public class FtpClientService implements IFtpClientService{
 
   @Override
   public String getFilesList() throws IOException {
+
+    Socket dataSocket = createDataSocket();
+
     sendMessage("LIST");
-    return receiveAnswer();
+
+    StringBuilder answer = new StringBuilder();
+
+    BufferedReader bInputStream = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));
+
+    do {
+      int c = bInputStream.read();
+      answer.append((char) c);
+    } while(bInputStream.ready());
+
+    dataSocket.close();
+//    ftpClient.appendToLogLn("[SERVER] " + answer);
+
+    answer.append(receiveAnswer());
+    return answer.toString();
   }
 
   @Override
@@ -136,7 +156,7 @@ public class FtpClientService implements IFtpClientService{
       throw new IOException("The file is a directory");
 
     sendMessage("STOR " + file.getName());
-    if (!receiveAnswer().startsWith("125"))
+    if (!receiveAnswer().startsWith("150"))
       throw new IOException("Failed STOR command");
 
     byte[] buffer = new byte[4096];

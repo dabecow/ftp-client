@@ -9,7 +9,6 @@ public class FtpClient {
   private BufferedReader cmdIn;
   private PrintWriter cmdWriter;
   private String log;
-  private Socket dataSocket;
 
   public FtpClient(){
     log = "Log:\n";
@@ -17,15 +16,6 @@ public class FtpClient {
 
   public void setCmdSocket(Socket cmdSocket){
     this.cmdSocket = cmdSocket;
-  }
-
-  public void setDataSocket(Socket dataSocket) {
-    this.dataSocket = dataSocket;
-  }
-
-  public void initDataStreams() throws IOException {
-    cmdIn = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));
-    cmdWriter = new PrintWriter(dataSocket.getOutputStream(), true);
   }
 
   public void initCmdStreams() throws IOException {
@@ -53,7 +43,4 @@ public class FtpClient {
     return cmdSocket;
   }
 
-  public Socket getDataSocket() {
-    return dataSocket;
-  }
 }

@@ -32,13 +32,13 @@ public class FtpClientService implements IFtpClientService{
     return answer.toString();
   }
 
-  private boolean connectClientDataStreams() throws IOException {
+  private Socket createDataSocket() throws IOException {
     sendMessage("PASV");
 
     String answer = receiveAnswer();
 
     if (!answer.startsWith("227"))
-      return false;
+      throw new IOException(answer);
     String ip;
     int port;
 
@@ -58,11 +58,7 @@ public class FtpClientService implements IFtpClientService{
       }
     } else throw new IOException();
 
-    Socket socket = new Socket(ip, port);
-    ftpClient.setDataSocket(socket);
-    ftpClient.initDataStreams();
-
-    return true;
+    return new Socket(ip, port);
   }
 
 
@@ -121,6 +117,11 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
+  public String getLog() {
+    return ftpClient.getLog();
+  }
+
+  @Override
   public String getFilesList() throws IOException {
     sendMessage("LIST");
     return receiveAnswer();
@@ -129,25 +130,26 @@ public class FtpClientService implements IFtpClientService{
   @Override
   public String sendFile(File file) throws IOException {
 
-    if (!connectClientDataStreams() || file.isDirectory())
-      throw new IOException("Data streams connect failed or the file is a directory");
+    Socket dataSocket = createDataSocket();
+
+    if (file.isDirectory())
+      throw new IOException("The file is a directory");
 
     sendMessage("STOR " + file.getName());
     if (!receiveAnswer().startsWith("125"))
       throw new IOException("Failed STOR command");
 
     byte[] buffer = new byte[4096];
-    int bytesRead = 0;
+
 
     BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
 
-    Socket dataSocket = ftpClient.getDataSocket();
-
-
     BufferedOutputStream dataOutput = new BufferedOutputStream(dataSocket.getOutputStream());
 
-    while ((bytesRead = input.read(buffer)) != -1) {
-      dataOutput.write(buffer, 0, bytesRead);
+    int c;
+
+    while ((c = input.read(buffer)) != -1) {
+      dataOutput.write(buffer, 0, c);
     }
 
     dataOutput.flush();
@@ -158,8 +160,40 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public String getFile() throws IOException {
-    return null;
+  public String getFile(String localPath, String remoteFileName) throws IOException {
+
+    sendMessage("TYPE I");
+    String answer;
+
+    Socket dataSocket = createDataSocket();
+
+    if (!(answer = receiveAnswer()).startsWith("200"))
+      throw new IOException(answer);
+
+
+    sendMessage("RETR " + remoteFileName);
+
+    if (!(answer = receiveAnswer()).startsWith("150"))
+      return answer;
+
+    File file = new File(localPath);
+
+    BufferedOutputStream bufferedOutput = new BufferedOutputStream(new FileOutputStream(file));
+    BufferedInputStream bufferedInput = new BufferedInputStream(dataSocket.getInputStream());
+
+    byte[] buffer = new byte[4096];
+
+    int c;
+    while ((c = bufferedInput.read(buffer)) != -1) {
+      bufferedOutput.write(buffer, 0, c);
+    }
+
+    bufferedOutput.flush();
+    bufferedInput.close();
+    bufferedOutput.close();
+    dataSocket.close();
+
+    return receiveAnswer();
   }
 
   @Override
@@ -185,9 +219,6 @@ public class FtpClientService implements IFtpClientService{
   @Override
   public String abort() throws IOException {
     sendMessage("ABOR");
-
-    if (!ftpClient.getDataSocket().isClosed())
-      ftpClient.getDataSocket().close();
 
     return receiveAnswer();
   }

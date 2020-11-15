@@ -1,7 +1,8 @@
 package edu.oreluniver.networks.ftpclient.service;
 
 import edu.oreluniver.networks.ftpclient.model.FtpClient;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
@@ -14,7 +15,7 @@ public class FtpClientService implements IFtpClientService{
     }
 
   private void sendMessage(String message){
-    ftpClient.getWriter().println(message);
+    ftpClient.getCmdWriter().println(message);
     ftpClient.appendToLogLn("[CLIENT] " + message);
   }
 
@@ -23,19 +24,21 @@ public class FtpClientService implements IFtpClientService{
     StringBuilder answer = new StringBuilder();
 
     do {
-      int c = ftpClient.getIn().read();
+      int c = ftpClient.getCmdIn().read();
       answer.append((char) c);
-    } while(ftpClient.getIn().ready());
+    } while(ftpClient.getCmdIn().ready());
 
     ftpClient.appendToLogLn("[SERVER] " + answer);
     return answer.toString();
   }
 
-  private void connectClientDataStreams(String answer) throws IOException {
+  private boolean connectClientDataStreams() throws IOException {
     sendMessage("PASV");
 
-    answer = receiveAnswer();
+    String answer = receiveAnswer();
 
+    if (!answer.startsWith("227"))
+      return false;
     String ip;
     int port;
 
@@ -58,7 +61,10 @@ public class FtpClientService implements IFtpClientService{
     Socket socket = new Socket(ip, port);
     ftpClient.setDataSocket(socket);
     ftpClient.initDataStreams();
+
+    return true;
   }
+
 
   @Override
   public void connectClientCmdStreams(String host, int port) throws IOException {
@@ -90,8 +96,8 @@ public class FtpClientService implements IFtpClientService{
   @Override
   public String quit() throws IOException {
     sendMessage("QUIT");
-    ftpClient.getWriter().close();
-    ftpClient.getIn().close();
+    ftpClient.getCmdWriter().close();
+    ftpClient.getCmdIn().close();
     ftpClient.getCmdSocket().close();
     return ftpClient.getLog();
   }
@@ -112,6 +118,78 @@ public class FtpClientService implements IFtpClientService{
   public String removeDirectory(String directoryName) throws IOException {
       sendMessage("RMD " + directoryName);
       return receiveAnswer();
+  }
+
+  @Override
+  public String getFilesList() throws IOException {
+    sendMessage("LIST");
+    return receiveAnswer();
+  }
+
+  @Override
+  public String sendFile(File file) throws IOException {
+
+    if (!connectClientDataStreams() || file.isDirectory())
+      throw new IOException("Data streams connect failed or the file is a directory");
+
+    sendMessage("STOR " + file.getName());
+    if (!receiveAnswer().startsWith("125"))
+      throw new IOException("Failed STOR command");
+
+    byte[] buffer = new byte[4096];
+    int bytesRead = 0;
+
+    BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
+
+    Socket dataSocket = ftpClient.getDataSocket();
+
+
+    BufferedOutputStream dataOutput = new BufferedOutputStream(dataSocket.getOutputStream());
+
+    while ((bytesRead = input.read(buffer)) != -1) {
+      dataOutput.write(buffer, 0, bytesRead);
+    }
+
+    dataOutput.flush();
+    dataOutput.close();
+    dataSocket.close();
+
+    return receiveAnswer();
+  }
+
+  @Override
+  public String getFile() throws IOException {
+    return null;
+  }
+
+  @Override
+  public String renameFile(String oldFileName, String newFileName) throws IOException {
+    String answer;
+    sendMessage("RNFR " + oldFileName);
+    answer = receiveAnswer();
+
+    if (!answer.startsWith("350"))
+      return answer;
+
+    sendMessage("RNTO " + newFileName);
+
+    return receiveAnswer();
+  }
+
+  @Override
+  public String deleteFile(String fileName) throws IOException {
+    sendMessage("DELE " + fileName);
+    return receiveAnswer();
+  }
+
+  @Override
+  public String abort() throws IOException {
+    sendMessage("ABOR");
+
+    if (!ftpClient.getDataSocket().isClosed())
+      ftpClient.getDataSocket().close();
+
+    return receiveAnswer();
   }
 
 

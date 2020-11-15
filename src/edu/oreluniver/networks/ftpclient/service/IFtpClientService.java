@@ -1,5 +1,6 @@
 package edu.oreluniver.networks.ftpclient.service;
 
+import java.io.File;
 import java.io.IOException;
 
 public interface IFtpClientService {
@@ -12,9 +13,14 @@ public interface IFtpClientService {
   String quit() throws IOException;
   String askServerToOpenPort(String ip) throws IOException;
 
+
+  String getFilesList() throws IOException;
+  String sendFile(File file) throws IOException;
+  String getFile() throws IOException;
+
+  String renameFile(String oldFileName, String newFileName) throws IOException;
+  String deleteFile(String fileName) throws IOException;
+  String abort() throws IOException;
   String makeDirectory(String directoryName) throws IOException;
   String removeDirectory(String directoryName) throws IOException;
-
-
-
 }

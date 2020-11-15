@@ -6,8 +6,8 @@ import java.net.Socket;
 public class FtpClient {
 
   private Socket cmdSocket;
-  private BufferedReader in;
-  private PrintWriter writer;
+  private BufferedReader cmdIn;
+  private PrintWriter cmdWriter;
   private String log;
   private Socket dataSocket;
 
@@ -24,13 +24,13 @@ public class FtpClient {
   }
 
   public void initDataStreams() throws IOException {
-    in = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));
-    writer = new PrintWriter(dataSocket.getOutputStream(), true);
+    cmdIn = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));
+    cmdWriter = new PrintWriter(dataSocket.getOutputStream(), true);
   }
 
   public void initCmdStreams() throws IOException {
-    in = new BufferedReader(new InputStreamReader(cmdSocket.getInputStream()));
-    writer = new PrintWriter(cmdSocket.getOutputStream(), true);
+    cmdIn = new BufferedReader(new InputStreamReader(cmdSocket.getInputStream()));
+    cmdWriter = new PrintWriter(cmdSocket.getOutputStream(), true);
   }
 
   public void appendToLogLn(String message){
@@ -41,16 +41,19 @@ public class FtpClient {
     return log;
   }
 
-  public BufferedReader getIn() {
-    return in;
+  public BufferedReader getCmdIn() {
+    return cmdIn;
   }
 
-  public PrintWriter getWriter() {
-    return writer;
+  public PrintWriter getCmdWriter() {
+    return cmdWriter;
   }
 
   public Socket getCmdSocket() {
     return cmdSocket;
   }
 
+  public Socket getDataSocket() {
+    return dataSocket;
+  }
 }

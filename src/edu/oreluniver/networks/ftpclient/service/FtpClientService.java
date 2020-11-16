@@ -26,7 +26,7 @@ public class FtpClientService implements IFtpClientService{
     do {
       int c = ftpClient.getCmdIn().read();
       answer.append((char) c);
-    } while(ftpClient.getCmdIn().ready());
+    } while (ftpClient.getCmdIn().ready());
 
     ftpClient.appendToLogLn("[SERVER] " + answer);
     return answer.toString();
@@ -108,7 +108,7 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public String makeDirectory(String directoryName) throws IOException {
+  public synchronized String makeDirectory(String directoryName) throws IOException {
       sendMessage("MKD " + directoryName);
       return receiveAnswer();
   }
@@ -148,7 +148,7 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public String sendFile(File file) throws IOException {
+  public synchronized String sendFile(File file) throws IOException {
 
     Socket dataSocket = createDataSocket();
 

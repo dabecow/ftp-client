@@ -35,21 +35,50 @@ public class Test {
       System.out.println(iFtpClientService.getFilesList());
       System.out.println(iFtpClientService.makeDirectory("dir"));
       System.out.println(iFtpClientService.changeWorkDirectory("dir"));
-      File file = new File("C:\\Users\\antom\\OneDrive\\Desktop\\ftp-client\\.gitignore");
 
-//      iFtpClientService.changeWorkDirectory();
-      try {
-        iFtpClientService.sendFile(file);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      Thread thread =
+              new Thread(() -> {
+                File file =
+                    new File(
+                        "C:\\Users\\antom\\OneDrive\\Desktop\\ftp-client\\Alice Cooper - Love It To Death.flac");
+                try {
+                  iFtpClientService.sendFile(file);
+                  System.out.println("The file is sent");
+                } catch (IOException e) {
+                  e.printStackTrace();
+                }
+              });
 
-      System.out.println("the file is sent");
+      Thread thread1 =
+              new Thread(() -> {
+                File file =
+                        new File(
+                                "C:\\Users\\antom\\OneDrive\\Desktop\\ftp-client\\19 - Comfortably Numb.flac");
+                try {
+                  iFtpClientService.sendFile(file);
+                  System.out.println("The file is sent");
+                } catch (IOException e) {
+                  e.printStackTrace();
+                }
+              });
+
+      thread.start();
+      thread1.start();
+//      try {
+//        iFtpClientService.sendFile(file);
+//      } catch (IOException e) {
+//        e.printStackTrace();
+//      }
+
+//      System.out.println(iFtpClientService.getFilesList());
+      System.out.println(iFtpClientService.makeDirectory("dir1"));
+
     } catch (Exception e) {
       e.getStackTrace();
       System.out.println("shit happened");
 
     }
+
 
     System.out.println(iFtpClientService.getLog());
   }

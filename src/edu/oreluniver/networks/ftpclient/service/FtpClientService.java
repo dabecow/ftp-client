@@ -58,9 +58,7 @@ public class FtpClientService implements IFtpClientService{
       }
     } else throw new IOException();
 
-    Socket socket = new Socket(ip, port);
-
-    return socket;
+    return new Socket(ip, port);
   }
 
 
@@ -88,8 +86,9 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public void reinitialize() {
+  public String reinitialize() throws IOException {
     sendMessage("REIN");
+    return receiveAnswer();
   }
 
   @Override
@@ -125,7 +124,7 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public String getFilesList() throws IOException {
+  public synchronized String getFilesList() throws IOException {
 
     Socket dataSocket = createDataSocket();
 
@@ -180,15 +179,17 @@ public class FtpClientService implements IFtpClientService{
   }
 
   @Override
-  public String getFile(String localPath, String remoteFileName) throws IOException {
+  public synchronized String getFile(String localPath, String remoteFileName) throws IOException {
 
     sendMessage("TYPE I");
     String answer;
 
-    Socket dataSocket = createDataSocket();
-
     if (!(answer = receiveAnswer()).startsWith("200"))
       throw new IOException(answer);
+
+    Socket dataSocket = createDataSocket();
+
+
 
 
     sendMessage("RETR " + remoteFileName);
@@ -196,17 +197,21 @@ public class FtpClientService implements IFtpClientService{
     if (!(answer = receiveAnswer()).startsWith("150"))
       return answer;
 
-    File file = new File(localPath);
+    File file = new File(localPath + remoteFileName);
+    if (!file.createNewFile())
+      throw new IOException("Error when creating the file");
 
     BufferedOutputStream bufferedOutput = new BufferedOutputStream(new FileOutputStream(file));
     BufferedInputStream bufferedInput = new BufferedInputStream(dataSocket.getInputStream());
 
     byte[] buffer = new byte[4096];
 
-    int c;
-    while ((c = bufferedInput.read(buffer)) != -1) {
-      bufferedOutput.write(buffer, 0, c);
+    int counter;
+    while ((counter = bufferedInput.read(buffer)) != -1) {
+      bufferedOutput.write(buffer, 0, counter);
     }
+
+
 
     bufferedOutput.flush();
     bufferedInput.close();

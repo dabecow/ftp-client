@@ -195,7 +195,7 @@ public class FtpClientService implements IFtpClientService{
     sendMessage("RETR " + remoteFileName);
 
     if (!(answer = receiveAnswer()).startsWith("150"))
-      return answer;
+      throw new IOException("Error - no such file");
 
     File file = new File(localPath + remoteFileName);
     if (!file.createNewFile())

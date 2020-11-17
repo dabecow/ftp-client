@@ -4,9 +4,6 @@ import edu.oreluniver.networks.ftpclient.service.IFtpClientService;
 import edu.oreluniver.networks.ftpclient.view.consoleView.ClientConsoleView;
 import edu.oreluniver.networks.ftpclient.view.consoleView.IClientConsoleView;
 
-import java.io.File;
-import java.io.IOException;
-
 public class Test {
 
   public static void main(String[] args) {

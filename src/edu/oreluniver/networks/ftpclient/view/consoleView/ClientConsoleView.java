@@ -179,7 +179,6 @@ public class ClientConsoleView implements IClientConsoleView {
                                     iFtpClientService.getFile(file.getPath(), name);
                                     showMessageBox("The file " + name + " is downloaded.",
                                             JOptionPane.INFORMATION_MESSAGE);
-                                    System.out.println("The file " + name + " is downloaded.");
                                 } catch (IOException e) {
                                     showMessageBox(e.getMessage(), JOptionPane.ERROR_MESSAGE);
                                 }

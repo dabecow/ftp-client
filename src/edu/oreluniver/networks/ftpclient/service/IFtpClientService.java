@@ -9,7 +9,7 @@ public interface IFtpClientService {
   boolean authorise(String username, String password) throws IOException;
   String receiveAnswer() throws IOException;
   String changeWorkDirectory(String newDirectoryPath) throws IOException;
-  void reinitialize() throws IOException;
+  String reinitialize() throws IOException;
   String quit() throws IOException;
   String askServerToOpenPort(String ip) throws IOException;
 
